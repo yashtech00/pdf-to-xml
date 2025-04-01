@@ -1,12 +1,10 @@
 import { prisma } from "@/db/db";
-import { error } from "console";
 import Credentials from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"
 import { NextAuthOptions, Session } from "next-auth";
-import { JWT } from "next-auth/jwt";
-import { signIn } from "next-auth/react";
+import { emailSchema, passwordSchema } from "./Schema";
 
 
 export const authOptions = {
@@ -22,6 +20,7 @@ export const authOptions = {
                 email: { type: "email" },
                 password: { type: "password" }
             },
+            //@ts-ignore
             async authorize(credentials) {
                 
                 //check if credentials are empty
@@ -29,13 +28,13 @@ export const authOptions = {
                     return null;
                 }
 
-                const emailValidation =  EmailSchema.safeParse(credentials.email);
-                if (!emailValidation) {
+                const emailValidation =  emailSchema.safeParse(credentials.email);
+                if (!emailValidation.success    ) {
                     return NextResponse.json("Enter a valid Email address", { status: (411) });
                 }
 
-                const passwordValidation = await PasswordSchema.safeParse(credentials.password);
-                if (!passwordValidation) {
+                const passwordValidation = passwordSchema.safeParse(credentials.password);
+                if (!passwordValidation.success) {
                     return NextResponse.json("Enter password in right format", { status: (411) });
                 }
 
@@ -78,6 +77,7 @@ export const authOptions = {
         strategy:"jwt"
     },
     callbacks: {
+        //generate jwt tokens
         async jwt({ token, account, profile, user }) {
             if (account && profile && user) {
                 token.id = account.access_token,
@@ -85,7 +85,7 @@ export const authOptions = {
             }
             return token; 
         },
-
+        // generate sessions
         async session({ session, token}) {
             try {
                 const user = await prisma.user.findUnique({
@@ -101,6 +101,7 @@ export const authOptions = {
             }
             return session
         },
+        //signIn callback 
         async signIn({account , profile}) {
             try {
                 if (account?.provider === "github") {
