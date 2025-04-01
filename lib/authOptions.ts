@@ -3,6 +3,10 @@ import { error } from "console";
 import Credentials from "next-auth/providers/credentials";
 import GithubProvider from "next-auth/providers/github";
 import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs"
+import { NextAuthOptions, Session } from "next-auth";
+import { JWT } from "next-auth/jwt";
+import { signIn } from "next-auth/react";
 
 
 export const authOptions = {
@@ -25,7 +29,7 @@ export const authOptions = {
                     return null;
                 }
 
-                const emailValidation = await EmailSchema.safeParse(credentials.email);
+                const emailValidation =  EmailSchema.safeParse(credentials.email);
                 if (!emailValidation) {
                     return NextResponse.json("Enter a valid Email address", { status: (411) });
                 }
@@ -41,7 +45,7 @@ export const authOptions = {
                             email:emailValidation.data
                         }
                     })
-                    if (!user) {
+                    if (!ExistingUser) {
                         const hashedPassword = await bcrypt.hash(passwordValidation.data, 10);
                         
                         const newUser = await prisma.user.create({
@@ -53,12 +57,75 @@ export const authOptions = {
                         })
                         return newUser
                     }
-                    return ExistingUser
+                    
+                    const passwordVerification = ExistingUser.password && await bcrypt.compare(ExistingUser.password, credentials.password);
+                    if (!passwordVerification) {
+                        return NextResponse.json("Wrong password",{status:(404)})
+                    }
+                    return ExistingUser;
                 } catch (e) {
                     console.error("Internal server error", { status: (500) });
-                    
+                    return null
                 }
+            },
+        }),
+    ],
+    pages: {
+        signIn:"/auth"
+    },
+    secret: process.env.JWT_SECRET ?? "secret",
+    session: {
+        strategy:"jwt"
+    },
+    callbacks: {
+        async jwt({ token, account, profile, user }) {
+            if (account && profile && user) {
+                token.id = account.access_token,
+            token.email = profile.email as string
             }
-        })
-    ]
-} 
+            return token; 
+        },
+
+        async session({ session, token}) {
+            try {
+                const user = await prisma.user.findUnique({
+                    where: {
+                        email:token.email || ""
+                    }
+                })
+                if (user) {
+                    session.user.id = user.id
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            return session
+        },
+        async signIn({account , profile}) {
+            try {
+                if (account?.provider === "github") {
+                    const user = await prisma.user.findUnique({
+                        where: {
+                            email:profile?.email || ""
+                        }
+                    })
+                    if (!user) {
+                        const newUser = await prisma.user.create({
+                            data: {
+                                email: profile?.email || "",
+                                provider:"GITHUB"
+                            }
+                        })
+                    }
+                }
+                
+                return true
+            } catch (e) {
+                console.error(e);
+                return false
+                
+            }
+        }
+
+    }
+} satisfies NextAuthOptions
