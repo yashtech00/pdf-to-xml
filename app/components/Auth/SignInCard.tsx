@@ -1,11 +1,21 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
 export function SignInCard() {
 
 
-    
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+
+    const handleSubmit = async () => {
+        try {
+            
+        } catch (e) {
+            
+        }
+    }
 
 
 
@@ -18,7 +28,10 @@ export function SignInCard() {
             <div className="flex flex-col justify-center md:flex-row bg-white-300 shadow-lg rounded-lg overflow-hidden w-[30%] ">
                 <div className="p-8 w-full">
                     <h1 className="flex justify-center text-xl font-bold mb-6">Sign In</h1>
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={handleSubmit}>
+                        <div>
+                            
+                        </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Email</label>
                             <input
@@ -26,6 +39,7 @@ export function SignInCard() {
                                 required
                                 placeholder="Enter your email"
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                onChange={(e)=>setEmail(e.target.value)}
                             />
                         </div>
                         <div>
@@ -35,6 +49,7 @@ export function SignInCard() {
                                 required
                                 placeholder="Enter your Password"
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                onChange={(e)=>setPassword(e.target.value)}
                             />
                         </div>
                         <button
