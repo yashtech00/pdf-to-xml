@@ -1,10 +1,27 @@
-
 "use client"
-import { LandingPage } from "./components/LandingPage";
+import React from 'react';
+import Navbar from './components/Landing/Navbar';
+import HeroSection from './components/Landing/HeroSection';
+import FeaturesSection from './components/Landing/FeaturesSection';
+import HowItWorks from './components/Landing/HowItWorks';
+import TestimonialsSection from './components/Landing/TestimonialsSection';
+import CTASection from './components/Landing/CTASection';
+import Footer from './components/Landing/Footer';
 
-
-export default function Home() {
+const Index = () => {
   return (
-    <LandingPage/>
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <HowItWorks />
+        <TestimonialsSection />
+        <CTASection />
+      </main>
+      <Footer />
+    </div>
   );
-}
+};
+
+export default Index;

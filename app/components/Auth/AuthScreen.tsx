@@ -4,9 +4,9 @@ import { useState } from "react"
 import { SignInCard } from "./SignInCard"
 import { SignUpCard } from "./SignUpCard"
 
-export  function AuthScreen({authType}) {
+export  function AuthScreen({authtype}) {
 
-    const [formType,setFormType] = useState(authType || "signin")
+    const [formType,setFormType] = useState(authtype || "signin")
 
 
 
