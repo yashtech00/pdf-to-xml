@@ -28,7 +28,7 @@ export function SignInCard({setFormType:setState}:SignInFlowProps) {
                     email,
                     password,
                     redirect: false,
-                    callbackUrl: "/dashboard"
+                    callbackUrl: "/home"
                 })
                 res.then((res) => {
                     if (res?.error) {
@@ -43,7 +43,7 @@ export function SignInCard({setFormType:setState}:SignInFlowProps) {
 
                 const res = signIn(provider, {
                     redirect: false,
-                    callbackUrl: "/dashboard"
+                    callbackUrl: "/home"
                 })
                 res.then((res) => {
                     if (res?.error) {
