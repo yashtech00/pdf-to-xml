@@ -5,9 +5,9 @@ import { DashboardNavbar } from "../components/DashboardNavbar";
 import Sidebar from "../components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "Analytics Dashboard | Web Traffic & Insights",
+  title: "Pdf to XML",
   description:
-    "Track and analyze website traffic with detailed insights, user behavior metrics, and performance reports.",
+    "Convert PDF files to XML format easily and quickly.",
 };
 
 export default function RootLayout({

@@ -29,6 +29,14 @@ model File{
   xmlContent String?
   filename String
   createdAt DateTime @default(now())
+  conversion Conversion[]
+}
+
+model Conversion {
+  id String @id @default(uuid())
+  fileId String
+  xmlResult String?
+  file File @relation(fields: [fileId],references: [id])
 }
 
 enum Provider{
