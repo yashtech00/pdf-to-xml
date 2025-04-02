@@ -11,8 +11,8 @@ export const authOptions = {
     providers: [
         //Github Provider
         GithubProvider({
-            clientId: process.env.GITHUB_CLIENT_ID || "",
-            clientSecret: process.env.GITHUB_CLIENT_SECRET || ""
+            clientId: process.env.Client_Id || "",
+            clientSecret: process.env.Client_secrets || ""
         }),
         //Credentials Provider
         Credentials({
@@ -78,8 +78,8 @@ export const authOptions = {
     },
     callbacks: {
         //generate jwt tokens
-        async jwt({ token, account, profile, user }) {
-            if (account && profile && user) {
+        async jwt({ token, account, profile }) {
+            if (account && profile) {
                 token.id = account.access_token,
             token.email = profile.email as string
             }

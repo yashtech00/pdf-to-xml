@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
+import { SignInflow } from "@/types/auth-type";
+import { ReactFormState } from "react-dom/client";
 
-export function SignInCard() {
+interface SignInFlowProps{
+    setFormType:(state:SignInflow)=>void
+}
+
+export function SignInCard({setFormType:setState}:SignInFlowProps) {
 
 
     const [email, setEmail] = useState("");
@@ -43,9 +49,6 @@ export function SignInCard() {
                     if (res?.error) {
                         setError(res.error);
                     }
-                    if (!res?.error) {
-                        router.push("/")
-                    }
                     setPending(false);
                 })
             }
@@ -54,10 +57,11 @@ export function SignInCard() {
         }
     }
 
-    const handleCredentials = async (provider: "CREDENTIALS") => {
+    const handleCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
         setError("");
-        setPending(true);
-        SignInWithProvider(provider);
+        
+        SignInWithProvider("CREDENTIALS");
     }
     const handleGithub = async (provider: "GITHUB") => {
         setError("");
@@ -72,7 +76,7 @@ export function SignInCard() {
                     <div className="p-8 w-full mt-12">
                         <h1 className="text-2xl font-bold mb-4">PDF-XML:</h1>
                     <h1 className="flex text-xl font-semibold mb-6">Sign In</h1>
-                    <form className="space-y-4" >
+                    <form className="space-y-4" onClick={() => handleCredentials} >
                         <div className="space-y-2 flex justify-center">
                             <button className="text-white bg-black px-4 py-2 w-full  rounded-lg" onClick={(e) => handleGithub("GITHUB")}>
                                 Continue with Github
@@ -83,7 +87,9 @@ export function SignInCard() {
                             <label className="block text-sm font-medium text-gray-700">Email</label>
                             <input
                                 type="email"
-                                required
+                                    required
+                                    disabled={pending}
+                                    value={email}
                                 placeholder="Enter your email"
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                 onChange={(e) => setEmail(e.target.value)}
@@ -93,28 +99,27 @@ export function SignInCard() {
                             <label className="block text-sm font-medium text-gray-700">Password</label>
                             <input
                                 type="Password"
-                                required
+                                    required
+                                    disabled={pending}
+                                    value={password}
                                 placeholder="Enter your Password"
                                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                onChange={(e) => setPassword(e.target.value)}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    
                             />
                         </div>
                         <button
                             type="submit"
                             className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                            onClick={() => handleCredentials("CREDENTIALS")}
+                                
+                                disabled={pending}
                         >
                             Sign In
                         </button>
                         <p className="flex justify-center">Don't have an account
-                            <Link href={{
-                                pathname: "/auth",
-                                query: {
-                                    authType: "signup"
-                                }
-                            }}>
-                                <span className="mx-2 text-blue-600 underline">Sign up</span>
-                            </Link>
+                         
+                                <span className="mx-2 text-blue-600 underline" onClick={()=>setState("signup")}>Sign up</span>
+                            
                         </p>
                     </form>
                 </div>
