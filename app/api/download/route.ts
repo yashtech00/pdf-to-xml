@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { NextRequest, NextResponse } from "next/server";
 
 
-export default async function (req:NextRequest) {
+export default async function GET(req:NextRequest) {
     
     const session = await getServerSession(authOptions);
     if( !session) {
@@ -21,7 +21,7 @@ export default async function (req:NextRequest) {
     try {
         const conversion = await prisma.conversion.findUnique({
             where: {
-                fileId: { String(fileId) }
+                id:fileId
             }
         });
         if (!conversion) {

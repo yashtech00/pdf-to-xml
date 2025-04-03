@@ -1,41 +1,71 @@
-import { prisma } from "@/db/db";
-import { authOptions } from "@/lib/authOptions";
-import multer from "multer";
-import { getServerSession } from "next-auth";
-import { NextRequest, NextResponse } from "next/server";
+import nextConnect from "";
+import upload from "@/lib/multer";
+import pdfParse from "pdf-parse";
+import { toXML } from "to-xml";
+import { PrismaClient } from "@prisma/client";
+import aws from "aws-sdk";
+import dotenv from "dotenv"
+import axios from "axios";
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+dotenv.config();
+const prisma = new PrismaClient();
 
-export const config = { api: { bodyParser: false } };
+const s3 = new aws.S3();
 
-export default async function handler(req: NextRequest, res: NextResponse) {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-        return NextResponse.json("Unauthorized", { status: 401 });
-    }
+const handler = nextConnect();
 
-    upload.single("File")(req as any, res as any, async (err: any) => {
-        if (err) {
-            return NextResponse.json({ error: "Error uploading file" }, { status: 400 });
-        }
+// Middleware for file upload
+handler.use(upload.single("file"));
 
-        const file = (req as any).file;
-        if (!file) {
-            return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-        }
+handler.post(async (req, res) => {
+  try {
+    const fileUrl = req.file.location;
 
-        try {
-            const uploadFile = await prisma.file.create({
-                data: {
-                    filename: file.name,
-                    xmlContent: Buffer.from(file.buffer).toString("base64"),
-                    userId:session.user.id,
-                }
-            })
-            return NextResponse.json({ message: "File uploaded successfully", fileId: uploadFile.id }, { status: 200 });
-        } catch (e) {
-            return NextResponse.json({ error: "Error saving file to database" }, { status: 500 });
-        }
-    })
-}
+    // Download the file from S3
+    const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
+
+    // Extract text from PDF
+    const pdfData = await pdfParse(response.data);
+    const extractedText = pdfData.text;
+
+    // Convert extracted text to JSON
+    const jsonData = { text: extractedText };
+
+    // Convert JSON to XML
+    const xmlData = toXML(jsonData);
+
+    // Upload XML file to S3
+    const fileName = `converted_${Date.now()}`;
+    const xmlParams = {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: `xml/${fileName}.xml`,
+      Body: xmlData,
+      ContentType: "application/xml",
+      ACL: "public-read",
+    };
+    const xmlUpload = await s3.upload(xmlParams).promise();
+    const xmlUrl = xmlUpload.Location;
+
+    // Store data in PostgreSQL
+    const storedData = await prisma.pdfData.create({
+      data: {
+        pdfUrl: fileUrl,
+        jsonData: jsonData,
+        xmlUrl: xmlUrl,
+      },
+    });
+
+    res.status(200).json({
+      message: "File uploaded and processed successfully",
+      json: jsonData,
+      xml: xmlData,
+      xmlUrl: xmlUrl,
+      dbEntry: storedData,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error processing file" });
+  }
+});
+
+export default handler;

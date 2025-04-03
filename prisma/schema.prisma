@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,30 +7,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id String @id @default(uuid())
-  email String @unique
-  password String?
-  provider Provider
-  file File[]
-}
-
-model File{
-  id String @id @default(uuid())
-  status String @default("pending")
-  userId String
-  user User @relation(fields:[userId],references:[id])
-  xmlContent String?
-  filename String
+model User {
+  id        String  @id @default(uuid())
+  email     String  @unique
+  password  String?
+  provider  Provider
+  files     File[]
   createdAt DateTime @default(now())
-  conversion Conversion[]
+  updatedAt DateTime @updatedAt
 }
 
-model Conversion {
-  id String @id @default(uuid())
-  fileId String
-  xmlResult String?
-  file File @relation(fields: [fileId],references: [id])
+model File {
+  id         String       @id @default(uuid())
+  filename   String
+  status     String       @default("pending")
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jsonData   Json?        // Stores extracted JSON data from PDF
+  xmlContent String?      // Stores the converted XML content
+  xmlUrl     String?      // URL to download the XML file (stored in AWS S3)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 }
 
 enum Provider{
